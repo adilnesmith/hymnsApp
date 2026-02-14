@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   Animated,
@@ -104,6 +104,7 @@ Was blind, but now I see.`,
 ------------------------------*/
 export default function LyricsScreen() {
   const params = useLocalSearchParams();
+  const router = useRouter();
   const { songId, songTitle } = params;
 
   const song = songLyrics[songId] || {
@@ -167,7 +168,6 @@ export default function LyricsScreen() {
           <View style={styles.songInfo}>
             <Text style={styles.songTitle}>{song.title}</Text>
             <Text style={styles.artistName}>{song.artist}</Text>
-            <Text style={styles.year}>📅 {song.year}</Text>
           </View>
 
           <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -182,6 +182,14 @@ export default function LyricsScreen() {
           </Animated.View>
         </View>
       </LinearGradient>
+
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.backButtonText}>← Back to Songs</Text>
+      </TouchableOpacity>
 
       {/* Controls */}
       <View style={styles.controls}>
@@ -292,6 +300,27 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 25,
     paddingHorizontal: 20,
+  },
+
+  backButton: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginTop: -10,
+    marginBottom: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignSelf: 'flex-start',
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#667eea',
+    fontWeight: '600',
   },
 
   headerContent: {

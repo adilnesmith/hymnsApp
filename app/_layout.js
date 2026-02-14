@@ -21,21 +21,21 @@ export default function RootLayout() {
         name="artist" 
         options={{
           title: 'Artists',
-          headerShown: true
+          headerShown: false
         }}
       />
       <Stack.Screen 
         name="songs" 
         options={{
           title: 'Songs',
-          headerShown: true
+          headerShown: false
         }}
       />
       <Stack.Screen 
         name="lyrics" 
         options={{
           title: 'Lyrics',
-          headerShown: true
+          headerShown: false
         }}
       />
     </Stack>

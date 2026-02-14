@@ -1,11 +1,40 @@
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSavedRegion = async () => {
+      try {
+        const savedRegion = await AsyncStorage.getItem('selectedRegion');
+        if (savedRegion) {
+          const parsed = JSON.parse(savedRegion);
+          if (parsed.alphabetical) {
+            router.replace({
+              pathname: '/artist',
+              params: { alphabetical: true }
+            });
+          } else {
+            const { regionId, regionName } = parsed;
+            router.replace({
+              pathname: '/artist',
+              params: { regionId, regionName }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved region:', error);
+      }
+    };
+
+    checkSavedRegion();
+  }, [router]);
 
   useEffect(() => {
     Animated.parallel([
@@ -21,7 +50,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim]);
 
   return (
     <LinearGradient

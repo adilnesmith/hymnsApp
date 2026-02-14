@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Mock data for artists
 const artistsData = {
@@ -39,6 +40,16 @@ const allArtists = [
   ...artistsData['6'],
 ].sort((a, b) => a.name.localeCompare(b.name));
 
+// Regions data for dropdown
+const regions = [
+  { id: '1', name: 'North America', icon: '🗽' },
+  { id: '2', name: 'Latin America', icon: '🌎' },
+  { id: '3', name: 'Europe', icon: '🏰' },
+  { id: '4', name: 'Africa', icon: '🦁' },
+  { id: '5', name: 'Asia', icon: '🏯' },
+  { id: '6', name: 'Oceania', icon: '🏝️' },
+];
+
 export default function ArtistScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -46,14 +57,46 @@ export default function ArtistScreen() {
   
   const [artists, setArtists] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [currentRegion, setCurrentRegion] = useState(null);
 
   useEffect(() => {
     if (alphabetical) {
       setArtists(allArtists);
+      setCurrentRegion({ name: 'All Regions (A-Z)', icon: '🌍' });
     } else if (regionId) {
       setArtists(artistsData[regionId] || []);
+      const region = regions.find(r => r.id === regionId);
+      setCurrentRegion(region || null);
     }
   }, [regionId, alphabetical]);
+
+  const handleRegionChange = async (newRegion) => {
+    try {
+      await AsyncStorage.setItem('selectedRegion', JSON.stringify({ 
+        regionId: newRegion.id, 
+        regionName: newRegion.name 
+      }));
+      setCurrentRegion(newRegion);
+      setArtists(artistsData[newRegion.id] || []);
+      setDropdownVisible(false);
+      setSearchQuery(''); // Clear search when changing region
+    } catch (error) {
+      console.error('Error saving region change:', error);
+    }
+  };
+
+  const handleAlphabeticalChange = async () => {
+    try {
+      await AsyncStorage.setItem('selectedRegion', JSON.stringify({ alphabetical: true }));
+      setCurrentRegion({ name: 'All Regions (A-Z)', icon: '🌍' });
+      setArtists(allArtists);
+      setDropdownVisible(false);
+      setSearchQuery(''); // Clear search when changing to alphabetical
+    } catch (error) {
+      console.error('Error saving alphabetical change:', error);
+    }
+  };
 
   const filteredArtists = artists.filter(artist => 
     artist.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -84,6 +127,42 @@ export default function ArtistScreen() {
         end={{ x: 1, y: 0 }}
       >
         <Text style={styles.title}>Select an Artist</Text>
+        
+        {/* Region Selector */}
+        <TouchableOpacity 
+          style={styles.regionSelector}
+          onPress={() => setDropdownVisible(!dropdownVisible)}
+        >
+          <Text style={styles.globeIcon}>🌍</Text>
+          <Text style={styles.regionText}>
+            {currentRegion ? currentRegion.name : 'Select Region'}
+          </Text>
+          <Text style={styles.dropdownArrow}>
+            {dropdownVisible ? '▲' : '▼'}
+          </Text>
+        </TouchableOpacity>
+
+        {dropdownVisible && (
+          <View style={styles.dropdownContainer}>
+            {regions.map((region) => (
+              <TouchableOpacity
+                key={region.id}
+                style={styles.dropdownItem}
+                onPress={() => handleRegionChange(region)}
+              >
+                <Text style={styles.dropdownIcon}>{region.icon}</Text>
+                <Text style={styles.dropdownText}>{region.name}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[styles.dropdownItem, styles.alphabeticalItem]}
+              onPress={handleAlphabeticalChange}
+            >
+              <Text style={styles.dropdownIcon}>📚</Text>
+              <Text style={styles.dropdownText}>All Regions (A-Z)</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         
         <View style={styles.searchContainer}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -127,12 +206,74 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 15,
     textAlign: 'center',
     color: '#ffffff',
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+  regionSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  globeIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  regionText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  dropdownArrow: {
+    fontSize: 16,
+    color: '#667eea',
+    fontWeight: 'bold',
+  },
+  dropdownContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  alphabeticalItem: {
+    borderBottomWidth: 0,
+  },
+  dropdownIcon: {
+    fontSize: 20,
+    marginRight: 12,
+    width: 24,
+    textAlign: 'center',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#2c3e50',
+    fontWeight: '500',
   },
   searchContainer: {
     flexDirection: 'row',

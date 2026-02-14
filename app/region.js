@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Mock data for regions with icons and colors
 const regions = [
@@ -16,12 +17,42 @@ const regions = [
 export default function RegionScreen() {
   const router = useRouter();
 
-  const renderRegion = ({ item }) => (
-    <TouchableOpacity 
-      onPress={() => router.push({
+  const handleRegionSelect = async (item) => {
+    try {
+      await AsyncStorage.setItem('selectedRegion', JSON.stringify({ regionId: item.id, regionName: item.name }));
+      router.push({
         pathname: '/artist',
         params: { regionId: item.id, regionName: item.name }
-      })}
+      });
+    } catch (error) {
+      console.error('Error saving region:', error);
+      // Still navigate even if save fails
+      router.push({
+        pathname: '/artist',
+        params: { regionId: item.id, regionName: item.name }
+      });
+    }
+  };
+
+  const handleAlphabeticalSelect = async () => {
+    try {
+      await AsyncStorage.setItem('selectedRegion', JSON.stringify({ alphabetical: true }));
+      router.push({
+        pathname: '/artist',
+        params: { alphabetical: true }
+      });
+    } catch (error) {
+      console.error('Error saving alphabetical selection:', error);
+      router.push({
+        pathname: '/artist',
+        params: { alphabetical: true }
+      });
+    }
+  };
+
+  const renderRegion = ({ item }) => (
+    <TouchableOpacity 
+      onPress={() => handleRegionSelect(item)}
       style={styles.cardWrapper}
     >
       <LinearGradient
@@ -66,10 +97,7 @@ export default function RegionScreen() {
       
       <TouchableOpacity 
         style={styles.alphabeticalButton}
-        onPress={() => router.push({
-          pathname: '/artist',
-          params: { alphabetical: true }
-        })}
+        onPress={handleAlphabeticalSelect}
       >
         <LinearGradient
           colors={['#667eea', '#764ba2']}

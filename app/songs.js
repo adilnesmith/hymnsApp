@@ -126,6 +126,14 @@ export default function SongListScreen() {
         </TouchableOpacity>
       </LinearGradient>
       
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.backButtonText}>← Back to Artists</Text>
+      </TouchableOpacity>
+      
       <FlatList
         data={filteredSongs}
         renderItem={renderSong}
@@ -208,6 +216,26 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 20,
+  },
+  backButton: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginTop: -10,
+    marginBottom: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignSelf: 'flex-start',
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#667eea',
+    fontWeight: '600',
   },
   songCard: {
     backgroundColor: '#fff',
